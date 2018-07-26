@@ -8,9 +8,6 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Networking;
-using Amazon;
-using Amazon.S3;
-using Amazon.S3.Model;
 using System.Text;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
@@ -35,6 +32,8 @@ public class MxlvlEditor : EditorWindow
 
     private string webglBuildFolder = string.Empty;
 
+    private string version = string.Empty;
+
     private string gameId = string.Empty;
 
     private string[] uploadFiles = {"webgl_build.json",
@@ -51,6 +50,11 @@ public class MxlvlEditor : EditorWindow
     private void Awake()
     {
 
+    }
+
+    private static void SaveSettings()
+    {
+        EditorUtility.SetDirty(MxlvlPublish.MxlvlPublisherSettings);
     }
 
     static MxlvlEditor()
@@ -70,31 +74,26 @@ public class MxlvlEditor : EditorWindow
     protected static void MenuItemOpenWizard()
     {
         MxlvlEditor win = GetWindow(WindowType, false, CurrentLang.WindowTitle, true) as MxlvlEditor;
+        win.version = MxlvlPublish.MxlvlPublisherSettings.Version;
+        win.webglBuildFolder = MxlvlPublish.MxlvlPublisherSettings.WebGLBuildPath;
+        win.gameId = MxlvlPublish.MxlvlPublisherSettings.PublisherKey;
     }
-
-
 
 
     private static void EditorUpdate()
     {
-        if (PhotonNetwork.PhotonServerSettings == null)
+        if (MxlvlPublish.MxlvlPublisherSettings == null)
         {
-            PhotonNetwork.CreateSettings();
+            MxlvlPublish.CreateSettings();
         }
-        if (PhotonNetwork.PhotonServerSettings == null)
+        if (MxlvlPublish.MxlvlPublisherSettings == null)
         {
             return;
         }
     }
 
-    private static void SaveSettings()
-    {
-        EditorUtility.SetDirty(PhotonNetwork.PhotonServerSettings);
-    }
-
     protected virtual void OnGUI()
     {
-        string game_deployment_id = "6fa9d96e-a257-40b1-bed3-86a64abb8eb8";
         GUI.skin.label.wordWrap = true;
 
         // setup info text
@@ -103,17 +102,22 @@ public class MxlvlEditor : EditorWindow
 
         GUILayout.BeginHorizontal();
         GUILayout.Label("Version");
-        EditorGUILayout.TextField("0.0.1").Trim();
+        this.version = EditorGUILayout.TextField(this.version).Trim();
         GUILayout.EndHorizontal();
 
         GUILayout.Label("Game Deployment ID");
-        EditorGUILayout.TextField("e8aefb90-a930-4d95-9315-ab1aa60ca930").Trim();
+        string setGameId = EditorGUILayout.TextField(this.gameId).Trim();
         GUILayout.Space(5);
+
+        if (setGameId != this.gameId)
+            this.gameId = setGameId;
 
         EditorGUILayout.TextField(this.webglBuildFolder).Trim();
         if (GUILayout.Button("Select WebGL Build Folder"))
         {
             this.webglBuildFolder = EditorUtility.OpenFolderPanel("WebGL Platform Build Folder", "", "");
+            this.HasUpdated();
+
         }
         GUILayout.Space(5);
 
@@ -136,9 +140,11 @@ public class MxlvlEditor : EditorWindow
         EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(this.webglBuildFolder));
         if (GUILayout.Button("[Publish]"))
         {
+            this.HasUpdated();
+    
             try
             {
-                UploadUrls urls = GetS3PresignedUrls(game_deployment_id);
+                UploadUrls urls = GetS3PresignedUrls(this.gameId);
                 foreach (string file in this.uploadFiles)
                 {
                     Debug.Log(file);
@@ -169,12 +175,14 @@ public class MxlvlEditor : EditorWindow
 
             }catch(Exception e)
             {
-                Debug.Log(e.Message);
+    
             }
         }
         EditorGUI.EndDisabledGroup();
 
         GUI.skin.label.richText = false;
+
+        
     }
 
 
@@ -185,12 +193,13 @@ public class MxlvlEditor : EditorWindow
 
             List<IMultipartFormSection> form = new List<IMultipartFormSection>();
             string dirToBuildFiles = Path.Combine(this.webglBuildFolder, buildFolder);
+
             form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "UnityLoader.js")), "UnityLoader.js", "javascript"));
             form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "webgl_build.json")), "webgl_build.json", "json"));
-            form.Add(new MultipartFormDataSection("version", "1.0.0"));
+            form.Add(new MultipartFormDataSection("version", "1.1.0"));
 
             string URL = string.Format("https://mxlvl-api.herokuapp.com/api/games/{0}/upload/", game_deployment_id);
-            UnityWebRequest www = UnityWebRequest.Post(URL, "");
+            UnityWebRequest www = UnityWebRequest.Post(URL, form);
             www.SendWebRequest();
             Debug.Log("Sent Request");
             if (www.isNetworkError || www.isHttpError)
@@ -207,14 +216,34 @@ public class MxlvlEditor : EditorWindow
                 UploadUrls url = JsonUtility.FromJson<UploadUrls>(text);
                 return url;
             }
-
-
         }
         catch (Exception e)
         {
             Debug.Log(e.Message);
         }
         return null;
+    }
+
+    public void HasUpdated()
+    {
+        if (MxlvlPublish.MxlvlPublisherSettings.PublisherKey != this.gameId)
+        {
+            MxlvlPublish.MxlvlPublisherSettings.PublisherKey = this.gameId;
+            MxlvlEditor.SaveSettings();
+        }
+
+        if (MxlvlPublish.MxlvlPublisherSettings.WebGLBuildPath != this.webglBuildFolder)
+        {
+            MxlvlPublish.MxlvlPublisherSettings.WebGLBuildPath = this.webglBuildFolder;
+            MxlvlEditor.SaveSettings();
+        }
+
+        if (MxlvlPublish.MxlvlPublisherSettings.WebGLBuildPath != this.version)
+        {
+            MxlvlPublish.MxlvlPublisherSettings.Version = this.version;
+            MxlvlEditor.SaveSettings();
+        }
+
     }
 
     public UploadUrls GetS3PresignedUrlsX()

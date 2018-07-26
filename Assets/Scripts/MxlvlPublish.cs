@@ -11,7 +11,7 @@ public static class MxlvlPublish {
 
     internal const string serverSettingsAssetFile = "MxlvlPublisherSettings";
 
-    public static PublisherSettings MxlvlPublisherSettings = (PublisherSettings)Resources.Load(MxlvlPublish.serverSettingsAssetFile, typeof(PublisherSettings));
+    public static MxlvlPublisherSettings MxlvlPublisherSettings = (MxlvlPublisherSettings)Resources.Load(MxlvlPublish.serverSettingsAssetFile, typeof(MxlvlPublisherSettings));
 
 
     static MxlvlPublish()
@@ -29,7 +29,7 @@ public static class MxlvlPublish {
     public static void CreateSettings()
     {
 #if UNITY_EDITOR
-        MxlvlPublish.MxlvlPublisherSettings = (PublisherSettings)Resources.Load(MxlvlPublish.serverSettingsAssetFile, typeof(PublisherSettings));
+        MxlvlPublish.MxlvlPublisherSettings = (MxlvlPublisherSettings)Resources.Load(MxlvlPublish.serverSettingsAssetFile, typeof(MxlvlPublisherSettings));
         if (MxlvlPublish.MxlvlPublisherSettings != null)
         {
             return;
@@ -51,7 +51,7 @@ public static class MxlvlPublish {
                 AssetDatabase.ImportAsset(settingsPath);
             }
 
-            MxlvlPublish.MxlvlPublisherSettings = (PublisherSettings)ScriptableObject.CreateInstance("PublisherSettings");
+            MxlvlPublish.MxlvlPublisherSettings = (MxlvlPublisherSettings)ScriptableObject.CreateInstance("MxlvlPublisherSettings");
             if (MxlvlPublish.MxlvlPublisherSettings != null)
             {
                 AssetDatabase.CreateAsset(MxlvlPublish.MxlvlPublisherSettings, serverSettingsAssetPath);
