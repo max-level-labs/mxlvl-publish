@@ -94,7 +94,7 @@ public class MxlvlEditor : EditorWindow
 
     protected virtual void OnGUI()
     {
-
+        string game_deployment_id = "6fa9d96e-a257-40b1-bed3-86a64abb8eb8";
         GUI.skin.label.wordWrap = true;
 
         // setup info text
@@ -138,49 +138,35 @@ public class MxlvlEditor : EditorWindow
         {
             try
             {
-                UploadUrls urls = GetS3PresignedUrls();
-                List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+                UploadUrls urls = GetS3PresignedUrls(game_deployment_id);
                 foreach (string file in this.uploadFiles)
                 {
+                    Debug.Log(file);
                     string upload_url_name = file.Replace(".unityweb", "");
                     upload_url_name = upload_url_name.Replace('.', '_');
                     string filePath = Path.Combine(dirToBuildFiles, file);
                     if (File.Exists(filePath))
                     {
                         Debug.Log(upload_url_name);
-                        if (upload_url_name == "webgl_build_asm_code")
+                        if (file == "webgl_build.asm.code.unityweb")
                         {
-                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_code, filePath));
+                            Debug.Log(ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_code_unityweb, filePath)));
                         }
                         if (upload_url_name == "webgl_build_asm_framework")
                         {
-                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_framework, filePath));
+                            Debug.Log(ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_framework_unityweb, filePath)));
                         }
                         if (upload_url_name == "webgl_build_asm_memory")
                         {
-                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_memory, filePath));
+                            Debug.Log(ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_memory_unityweb, filePath)));
                         }
                         if (upload_url_name == "webgl_build_data")
                         {
-                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_data, filePath));
+                            Debug.Log(ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_data_unityweb, filePath)));
                         }
-                        Debug.Log(filePath);
-                        //form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(filePath), file, "unity"));
                     }
                 }
 
-                form.Add(new MultipartFormDataSection("version", "1.0"));
-
-
-                //string URL = "http://127.0.0.1:800/api/games/8100e328-a1f9-4248-a27f-191b17c07c0f/upload/";
-                string URL = "https://mxlvl-api.herokuapp.com/api/games/b37eeb4b-2eef-49c9-b4c1-7561441e2b37/upload/";
-                //UnityWebRequest www = UnityWebRequest.Post(URL, form);
-                //www.Send();
-
-                //while (www.responseCode == -1)
-                //{
-                //    //do something, or nothing while blocking
-                //}
             }catch(Exception e)
             {
                 Debug.Log(e.Message);
@@ -191,12 +177,52 @@ public class MxlvlEditor : EditorWindow
         GUI.skin.label.richText = false;
     }
 
-    public UploadUrls GetS3PresignedUrls()
+
+    public UploadUrls GetS3PresignedUrls(string game_deployment_id)
     {
         try
         {
-            string URL = "http://127.0.0.1:5000/upload/urls";
-            UnityWebRequest www = UnityWebRequest.Get(URL);
+
+            List<IMultipartFormSection> form = new List<IMultipartFormSection>();
+            string dirToBuildFiles = Path.Combine(this.webglBuildFolder, buildFolder);
+            form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "UnityLoader.js")), "UnityLoader.js", "javascript"));
+            form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "webgl_build.json")), "webgl_build.json", "json"));
+            form.Add(new MultipartFormDataSection("version", "1.0.0"));
+
+            string URL = string.Format("https://mxlvl-api.herokuapp.com/api/games/{0}/upload/", game_deployment_id);
+            UnityWebRequest www = UnityWebRequest.Post(URL, "");
+            www.SendWebRequest();
+            Debug.Log("Sent Request");
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                while (www.responseCode == 0)
+                {
+                }
+                string text = www.downloadHandler.text;
+                Debug.Log(text);
+                UploadUrls url = JsonUtility.FromJson<UploadUrls>(text);
+                return url;
+            }
+
+
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.Message);
+        }
+        return null;
+    }
+
+    public UploadUrls GetS3PresignedUrlsX()
+    {
+        try
+        {
+            string URL = "https://mxlvl-api.herokuapp.com/api/games/b37eeb4b-2eef-49c9-b4c1-7561441e2b37/upload/urls/";
+            UnityWebRequest www = UnityWebRequest.Post(URL, "");
             www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
@@ -208,7 +234,9 @@ public class MxlvlEditor : EditorWindow
                 while (www.responseCode == 0)
                 {
                 }
-                UploadUrls url = JsonUtility.FromJson<UploadUrls>(www.downloadHandler.text);
+                string text = www.downloadHandler.text;
+                Debug.Log(text);
+                UploadUrls url = JsonUtility.FromJson<UploadUrls>(text) ;
                 return url;
             }
         }
