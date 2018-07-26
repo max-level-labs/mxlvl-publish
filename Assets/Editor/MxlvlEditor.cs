@@ -197,8 +197,9 @@ public class MxlvlEditor : EditorWindow
             form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "UnityLoader.js")), "UnityLoader.js", "javascript"));
             form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(Path.Combine(dirToBuildFiles, "webgl_build.json")), "webgl_build.json", "json"));
             form.Add(new MultipartFormDataSection("version", "1.1.0"));
+            form.Add(new MultipartFormDataSection("access_key", game_deployment_id));
 
-            string URL = string.Format("https://mxlvl-api.herokuapp.com/api/games/{0}/upload/", game_deployment_id);
+            string URL = "https://mxlvl-api.herokuapp.com/api/games/upload/";
             UnityWebRequest www = UnityWebRequest.Post(URL, form);
             www.SendWebRequest();
             Debug.Log("Sent Request");
@@ -210,9 +211,10 @@ public class MxlvlEditor : EditorWindow
             {
                 while (www.responseCode == 0)
                 {
+
                 }
                 string text = www.downloadHandler.text;
-                Debug.Log(text);
+                Debug.Log(text + " " + www.responseCode);
                 UploadUrls url = JsonUtility.FromJson<UploadUrls>(text);
                 return url;
             }
