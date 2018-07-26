@@ -101,9 +101,12 @@ public class MxlvlEditor : EditorWindow
         GUI.skin.label.richText = true;
         GUILayout.Label("Welcome to the Mxlvl Publisher tool for Unity.\nThis window will let you publish your game to the Mxlvl platform <b>AFTER</b> you have built a WebGL platform version of your game.\n\n<b>-</b>Enter the Publisher ID below\n<b>-</b>Select folder location of the WebGL platform build\n<b>-</b>Click Publish\n\n*upload can take up to 5 minutes");
 
-        GUILayout.Label("Publisher Token ID");
-        EditorGUILayout.TextField("e8aefb90-a930-4d95-9315-ab1aa60ca930").Trim();
-        GUILayout.Label("Game ID");
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Version");
+        EditorGUILayout.TextField("0.0.1").Trim();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Label("Game Deployment ID");
         EditorGUILayout.TextField("e8aefb90-a930-4d95-9315-ab1aa60ca930").Trim();
         GUILayout.Space(5);
 
@@ -136,25 +139,42 @@ public class MxlvlEditor : EditorWindow
             try
             {
                 UploadUrls urls = GetS3PresignedUrls();
-                var puts3ObjectHandler = GameObject.Find("Mxlvl.Publisher").GetComponent<MxlvlS3PublishObject>();
                 List<IMultipartFormSection> form = new List<IMultipartFormSection>();
                 foreach (string file in this.uploadFiles)
                 {
+                    string upload_url_name = file.Replace(".unityweb", "");
+                    upload_url_name = upload_url_name.Replace('.', '_');
                     string filePath = Path.Combine(dirToBuildFiles, file);
                     if (File.Exists(filePath))
                     {
-                        //puts3ObjectHandler.PostObject(file, filePath);
-                        UploadToS3(filePath, urls.webgl_build_asm_code);
-                        break;
-                        form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(filePath), file, "unity"));
+                        Debug.Log(upload_url_name);
+                        if (upload_url_name == "webgl_build_asm_code")
+                        {
+                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_code, filePath));
+                        }
+                        if (upload_url_name == "webgl_build_asm_framework")
+                        {
+                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_framework, filePath));
+                        }
+                        if (upload_url_name == "webgl_build_asm_memory")
+                        {
+                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_memory, filePath));
+                        }
+                        if (upload_url_name == "webgl_build_data")
+                        {
+                            ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_data, filePath));
+                        }
+                        Debug.Log(filePath);
+                        //form.Add(new MultipartFormFileSection("file", System.IO.File.ReadAllBytes(filePath), file, "unity"));
                     }
                 }
+
                 form.Add(new MultipartFormDataSection("version", "1.0"));
 
 
                 //string URL = "http://127.0.0.1:800/api/games/8100e328-a1f9-4248-a27f-191b17c07c0f/upload/";
                 string URL = "https://mxlvl-api.herokuapp.com/api/games/b37eeb4b-2eef-49c9-b4c1-7561441e2b37/upload/";
-                UnityWebRequest www = UnityWebRequest.Post(URL, form);
+                //UnityWebRequest www = UnityWebRequest.Post(URL, form);
                 //www.Send();
 
                 //while (www.responseCode == -1)
@@ -163,7 +183,7 @@ public class MxlvlEditor : EditorWindow
                 //}
             }catch(Exception e)
             {
-                Debug.Log(e);
+                Debug.Log(e.Message);
             }
         }
         EditorGUI.EndDisabledGroup();
@@ -198,55 +218,5 @@ public class MxlvlEditor : EditorWindow
         }
         return null;
     }
-
-    public void UploadToS3(string filePath, string url)
-    {
-        try
-        {
-            UnityWebRequest www = UnityWebRequest.Put(url, System.IO.File.ReadAllBytes(filePath));
-            www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Debug.Log(www.error);
-            }
-            else
-            {
-                while(www.responseCode == 0)
-                {
-                }
-                Debug.Log("Upload complete!: " + www.responseCode + " " + www.downloadHandler.text);
-
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.Log(e.Message);
-        }
-
-    }
-
-    public void UploadToS3X(string filePath, string key)
-    {
-        try
-        {
-            string URL = "";
-            UnityWebRequest www = UnityWebRequest.Put(URL, System.IO.File.ReadAllBytes(filePath));
-            www.SetRequestHeader("Content-Type", "application/vnd.unity");
-            www.Send();
-
-            while (www.responseCode == 0)
-            {
-                //do something, or nothing while blocking
-            }
-            Debug.Log("Send Response: " + www.responseCode + " " + www.downloadHandler.text);
-        } catch(Exception e)
-        {
-            Debug.Log(e.Message);
-        }
-        
-    }
-
-    
 }
 
