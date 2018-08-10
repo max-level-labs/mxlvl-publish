@@ -1,6 +1,7 @@
 # MXLVL Unity Publish Tool
  ## Releases
-Release v0.1.0 Beta [Android 17]
+Release v0.1.0 Beta [Android 17](https://github.com/max-level-labs/mxlvl-publish/releases)
+
  ![alt text](https://i.imgur.com/YEfhnaA.png "Logo Title Text 1")
  ## Instructions
 1. Unity: Install mxlvl.publish.unitypackage
