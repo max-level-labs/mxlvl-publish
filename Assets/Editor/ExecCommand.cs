@@ -11,7 +11,13 @@ public static class ExecCommand {
         ProcessStartInfo processInfo;
         Process process;
 
+#if UNITY_EDITOR_OSX
+        command = command.Replace("curl", "");
+        processInfo = new ProcessStartInfo("curl", command);
+#elif UNITY_EDITOR_WIN
         processInfo = new ProcessStartInfo("cmd.exe", "/c " + command);
+#endif
+
         processInfo.CreateNoWindow = true;
         processInfo.UseShellExecute = false;
         // *** Redirect the output ***
@@ -31,6 +37,6 @@ public static class ExecCommand {
         
         process.Close();
 
-        return output + " : Errors " + error;
+        return output + " : Errors " + error + " finished";
     }
 }
