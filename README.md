@@ -12,7 +12,7 @@ Release v0.1.0 Beta [Android 17](https://github.com/max-level-labs/mxlvl-publish
 ![access key location](https://github.com/max-level-labs/mxlvl-publish/blob/master/access_key.png)
 1. Unity: `Window > Mxlvl Unity Publisher > Mxlvl Wizard`
 ![Mxvl Wizard](https://github.com/max-level-labs/mxlvl-publish/blob/master/mxlvl_wizard.png)
-1. Set Game Publisher ID from your profile
+1. Set `Game Deployment ID` from your profile
 1. Select `webgl_build` folder 
 1. Click `Publish` - This process could take a couple minutes depending on your upload speed
 1. Visit http://beta.mxlvl.com to see your game on the top games!! :D
