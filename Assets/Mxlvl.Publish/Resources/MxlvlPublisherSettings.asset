@@ -11,6 +11,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8948646ee9a8ced48a15bfda07357e84, type: 3}
   m_Name: MxlvlPublisherSettings
   m_EditorClassIdentifier: 
-  PublisherKey: f1c0859a-1cdc-4a93-b4f9-715765b06fe5
-  WebGLBuildPath: C:/Users/ricke/Documents/Mxlvl.Publish/webgl_build
-  Version: 1.5
+  PublisherKey: 
+  WebGLBuildPath: 
+  Version: 0.1
