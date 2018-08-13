@@ -147,13 +147,12 @@ public class MxlvlEditor : EditorWindow
                 UploadUrls urls = GetS3PresignedUrls(this.gameId);
                 foreach (string file in this.uploadFiles)
                 {
-                    Debug.Log(file);
+                    continue;
                     string upload_url_name = file.Replace(".unityweb", "");
                     upload_url_name = upload_url_name.Replace('.', '_');
                     string filePath = Path.Combine(dirToBuildFiles, file);
                     if (File.Exists(filePath))
                     {
-                        Debug.Log(upload_url_name);
                         if (file == "webgl_build.asm.code.unityweb")
                         {
                             Debug.Log(ExecCommand.ExecuteCommand(string.Format(urls.webgl_build_asm_code_unityweb, filePath)));
@@ -185,7 +184,6 @@ public class MxlvlEditor : EditorWindow
         
     }
 
-
     public UploadUrls GetS3PresignedUrls(string game_deployment_id)
     {
         try
@@ -200,23 +198,25 @@ public class MxlvlEditor : EditorWindow
             form.Add(new MultipartFormDataSection("access_key", game_deployment_id));
 
             string URL = "https://mxlvl-api.herokuapp.com/api/games/upload/";
-            UnityWebRequest www = UnityWebRequest.Post(URL, form);
-            www.SendWebRequest();
-            Debug.Log("Sent Request");
-            if (www.isNetworkError || www.isHttpError)
+            using (UnityWebRequest www = UnityWebRequest.Post(URL, form))
             {
-                Debug.Log(www.error);
-            }
-            else
-            {
-                while (www.responseCode == 0)
+                www.SendWebRequest();
+                Debug.Log("Sent Request");
+                if (www.isNetworkError || www.isHttpError)
                 {
-
+                    Debug.Log(www.error);
                 }
-                string text = www.downloadHandler.text;
-                Debug.Log(text + " " + www.responseCode);
-                UploadUrls url = JsonUtility.FromJson<UploadUrls>(text);
-                return url;
+                else
+                {
+                    while (www.responseCode == 0)
+                    {
+
+                    }
+                    string text = System.Text.Encoding.ASCII.GetString(www.downloadHandler.data);
+                    Debug.Log(text + " : " + www.responseCode + " " + www.downloadedBytes + " data leng: " + www.downloadHandler.data.Length);
+                    UploadUrls url = JsonUtility.FromJson<UploadUrls>(text);
+                    return url;
+                }
             }
         }
         catch (Exception e)
@@ -248,34 +248,5 @@ public class MxlvlEditor : EditorWindow
 
     }
 
-    public UploadUrls GetS3PresignedUrlsX()
-    {
-        try
-        {
-            string URL = "https://mxlvl-api.herokuapp.com/api/games/b37eeb4b-2eef-49c9-b4c1-7561441e2b37/upload/urls/";
-            UnityWebRequest www = UnityWebRequest.Post(URL, "");
-            www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Debug.Log(www.error);
-            }
-            else
-            {
-                while (www.responseCode == 0)
-                {
-                }
-                string text = www.downloadHandler.text;
-                Debug.Log(text);
-                UploadUrls url = JsonUtility.FromJson<UploadUrls>(text) ;
-                return url;
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.Log(e.Message);
-        }
-        return null;
-    }
 }
 
