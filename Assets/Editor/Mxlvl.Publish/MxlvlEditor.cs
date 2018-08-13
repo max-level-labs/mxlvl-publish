@@ -147,7 +147,6 @@ public class MxlvlEditor : EditorWindow
                 UploadUrls urls = GetS3PresignedUrls(this.gameId);
                 foreach (string file in this.uploadFiles)
                 {
-                    continue;
                     string upload_url_name = file.Replace(".unityweb", "");
                     upload_url_name = upload_url_name.Replace('.', '_');
                     string filePath = Path.Combine(dirToBuildFiles, file);
