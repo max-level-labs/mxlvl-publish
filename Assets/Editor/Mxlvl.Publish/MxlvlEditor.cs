@@ -106,7 +106,11 @@ public class MxlvlEditor : EditorWindow
         GUILayout.EndHorizontal();
 
         GUILayout.Label("Game Deployment ID");
-        string setGameId = EditorGUILayout.TextField(this.gameId).Trim();
+        string setGameId = EditorGUILayout.TextField(this.gameId);
+
+        if (!string.IsNullOrEmpty(setGameId))
+            setGameId = setGameId.Trim();
+
         GUILayout.Space(5);
 
         if (setGameId != this.gameId)
